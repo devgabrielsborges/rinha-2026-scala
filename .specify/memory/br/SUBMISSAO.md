@@ -6,7 +6,7 @@ Este documento descreve como submeter o seu backend para a Rinha de Backend 2026
 
 - Para participar da rinha, todos os seus repositórios precisam estar soba licença MIT.
 - Não é permitido usar os payloads do teste como lookup.
-- Se avacalhar o evento, será removido/a sem aviso prévio. 
+- Se avacalhar o evento, será removido/a sem aviso prévio.
 
 ## Inscrição
 

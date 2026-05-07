@@ -16,7 +16,7 @@ Read ALL `.md` files in `.specify/memory/` and output their contents. This gives
 
    ```
    ## Memory: {filename}
-   
+
    {file contents}
    ```
 
