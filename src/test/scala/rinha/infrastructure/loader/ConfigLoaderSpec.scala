@@ -7,7 +7,7 @@ import java.nio.file.Paths
 
 class ConfigLoaderSpec extends FunSuite:
 
-  private val resourceDir = Paths.get("src", "main", "resources")
+  private val resourceDir = Paths.get("resources")
 
   test("loadNormalization parses normalization.json correctly") {
     val norm = ConfigLoader.loadNormalization(resourceDir.resolve("normalization.json"))

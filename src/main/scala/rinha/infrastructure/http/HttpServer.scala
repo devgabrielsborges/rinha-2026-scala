@@ -9,6 +9,7 @@ import org.http4s.netty.server.NettyServerBuilder
 import org.http4s.server.Server
 
 import rinha.application.FraudScoreUseCase
+import rinha.infrastructure.loader.Env
 
 object HttpServer:
 
@@ -16,8 +17,8 @@ object HttpServer:
     useCase: FraudScoreUseCase,
     ready: Ref[IO, Boolean]
   ): Resource[IO, Server] =
-    val portStr  = sys.env.getOrElse("HTTP_PORT", "8080")
-    val hostStr  = sys.env.getOrElse("HTTP_HOST", "0.0.0.0")
+    val portStr  = Env.getOrElse("HTTP_PORT", "8080")
+    val hostStr  = Env.getOrElse("HTTP_HOST", "0.0.0.0")
     val httpPort = Port.fromString(portStr).getOrElse(port"8080")
     val httpHost = Host.fromString(hostStr).getOrElse(host"0.0.0.0")
 

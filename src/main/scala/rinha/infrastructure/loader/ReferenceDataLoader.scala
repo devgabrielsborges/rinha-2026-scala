@@ -24,8 +24,8 @@ object ReferenceDataLoader:
   )
 
   def loadFromEnv(): LoadResult =
-    val dataDir = sys.env.getOrElse("DATA_DIR", "resources")
-    val refFile = sys.env.getOrElse("REFERENCES_FILE", "references.json.gz")
+    val dataDir = Env.getOrElse("DATA_DIR", "resources")
+    val refFile = Env.getOrElse("REFERENCES_FILE", "references.json.gz")
     val path    = Paths.get(dataDir, refFile)
     load(path)
 

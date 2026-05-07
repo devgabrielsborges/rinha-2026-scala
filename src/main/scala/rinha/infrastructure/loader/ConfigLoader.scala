@@ -41,9 +41,9 @@ object ConfigLoader:
     MccRiskMap(entries)
 
   def loadFromEnv(): (NormalizationConstants, MccRiskMap) =
-    val dataDir           = sys.env.getOrElse("DATA_DIR", "src/main/resources")
-    val normalizationFile = sys.env.getOrElse("NORMALIZATION_FILE", "normalization.json")
-    val mccRiskFile       = sys.env.getOrElse("MCC_RISK_FILE", "mcc_risk.json")
+    val dataDir           = Env.getOrElse("DATA_DIR", "resources")
+    val normalizationFile = Env.getOrElse("NORMALIZATION_FILE", "normalization.json")
+    val mccRiskFile       = Env.getOrElse("MCC_RISK_FILE", "mcc_risk.json")
 
     val normPath = Paths.get(dataDir, normalizationFile)
     val mccPath  = Paths.get(dataDir, mccRiskFile)
