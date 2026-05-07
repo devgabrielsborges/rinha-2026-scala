@@ -35,14 +35,14 @@
 
 **CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T006 Create `NormalizationConstants` case class in `src/main/scala/rinha/domain/NormalizationConstants.scala` with the 7 normalization fields (maxAmount, maxInstallments, amountVsAvgRatio, maxMinutes, maxKm, maxTxCount24h, maxMerchantAvgAmount)
-- [ ] T007 [P] Create `MccRiskMap` opaque type in `src/main/scala/rinha/domain/MccRiskMap.scala` with `riskFor(mcc: String): Float` method and default risk 0.5
-- [ ] T008 [P] Create `Label` enum (`Fraud`, `Legit`) in `src/main/scala/rinha/domain/Label.scala`
-- [ ] T009 [P] Create `FraudDecision` case class in `src/main/scala/rinha/domain/FraudDecision.scala` with `approved: Boolean` and `fraudScore: Float`
-- [ ] T010 Create `TransactionRequest` and nested case classes (`TransactionData`, `CustomerData`, `MerchantData`, `TerminalData`, `LastTransactionData`) in `src/main/scala/rinha/domain/Transaction.scala` with `lastTransaction: Option[LastTransactionData]`
-- [ ] T011 Create `Neighbor` case class in `src/main/scala/rinha/domain/Neighbor.scala` with `index: Int`, `distanceSq: Float`, `label: Label`
-- [ ] T012 Create `VectorSearchPort` trait in `src/main/scala/rinha/application/VectorSearchPort.scala` defining `findKNearest(query: Array[Float], k: Int): List[Neighbor]`
-- [ ] T013 Create `ConfigLoader` in `src/main/scala/rinha/infrastructure/loader/ConfigLoader.scala` to parse `normalization.json` → `NormalizationConstants` and `mcc_risk.json` → `MccRiskMap`
+- [X] T006 Create `NormalizationConstants` case class in `src/main/scala/rinha/domain/NormalizationConstants.scala` with the 7 normalization fields (maxAmount, maxInstallments, amountVsAvgRatio, maxMinutes, maxKm, maxTxCount24h, maxMerchantAvgAmount)
+- [X] T007 [P] Create `MccRiskMap` opaque type in `src/main/scala/rinha/domain/MccRiskMap.scala` with `riskFor(mcc: String): Float` method and default risk 0.5
+- [X] T008 [P] Create `Label` enum (`Fraud`, `Legit`) in `src/main/scala/rinha/domain/Label.scala`
+- [X] T009 [P] Create `FraudDecision` case class in `src/main/scala/rinha/domain/FraudDecision.scala` with `approved: Boolean` and `fraudScore: Float`
+- [X] T010 Create `TransactionRequest` and nested case classes (`TransactionData`, `CustomerData`, `MerchantData`, `TerminalData`, `LastTransactionData`) in `src/main/scala/rinha/domain/Transaction.scala` with `lastTransaction: Option[LastTransactionData]`
+- [X] T011 Create `Neighbor` case class in `src/main/scala/rinha/domain/Neighbor.scala` with `index: Int`, `distanceSq: Float`, `label: Label`
+- [X] T012 Create `VectorSearchPort` trait in `src/main/scala/rinha/application/VectorSearchPort.scala` defining `findKNearest(query: Array[Float], k: Int): List[Neighbor]`
+- [X] T013 Create `ConfigLoader` in `src/main/scala/rinha/infrastructure/loader/ConfigLoader.scala` to parse `normalization.json` → `NormalizationConstants` and `mcc_risk.json` → `MccRiskMap`
 
 **Checkpoint**: All domain types compile, `ConfigLoader` loads both JSON files successfully.
 
