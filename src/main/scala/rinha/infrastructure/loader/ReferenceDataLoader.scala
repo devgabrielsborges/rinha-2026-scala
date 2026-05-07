@@ -34,19 +34,25 @@ object ReferenceDataLoader:
     val tree                     = VPTree.build(vectors, labels, Dims, count)
     LoadResult(vectors, labels, count, tree)
 
+  private val DefaultExpectedCount = 3_100_000
+
   private def parseGzippedJson(path: Path): (Array[Float], java.util.BitSet, Int) =
     val fis = new FileInputStream(path.toFile)
     val bis = new BufferedInputStream(fis, 1024 * 256)
     val gis = new GZIPInputStream(bis, 1024 * 256)
 
+    val expectedCount =
+      Env.getOrElse("REFERENCES_EXPECTED_COUNT", DefaultExpectedCount.toString).toInt
+
     try
-      var vectors = new Array[Float](1024 * Dims)
-      val labels  = new java.util.BitSet(1024)
+      var vectors = new Array[Float](expectedCount * Dims)
+      val labels  = new java.util.BitSet(expectedCount)
       var count   = 0
 
       scanJsonArrayFromStream[ReferenceRecord](gis) { record =>
         if count * Dims >= vectors.length then
-          val newVectors = new Array[Float](vectors.length * 2)
+          val newLen     = (vectors.length * 1.25).toInt
+          val newVectors = new Array[Float](newLen)
           System.arraycopy(vectors, 0, newVectors, 0, vectors.length)
           vectors = newVectors
 
@@ -56,11 +62,5 @@ object ReferenceDataLoader:
         true
       }
 
-      val trimmed = if count * Dims < vectors.length then
-        val t = new Array[Float](count * Dims)
-        System.arraycopy(vectors, 0, t, 0, count * Dims)
-        t
-      else vectors
-
-      (trimmed, labels, count)
+      (vectors, labels, count)
     finally gis.close()

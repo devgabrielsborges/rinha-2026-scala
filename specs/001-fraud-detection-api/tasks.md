@@ -98,11 +98,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T030 [US3] Create `nginx.conf` in project root — upstream with `api1:8080` and `api2:8080`, listen on 9999, round-robin, `keepalive 64`
-- [ ] T031 [US3] Create `Dockerfile` in project root — multi-stage build: Stage 1 (sbt compile + assembly/native-image), Stage 2 (minimal runtime with JRE or distroless), copy fat JAR or native binary + reference data files
-- [ ] T032 [US3] Create `docker-compose.yml` in project root — nginx (0.10 CPU, 10 MB), api1 (0.45 CPU, 170 MB), api2 (0.45 CPU, 170 MB), port 9999, bridge network, healthcheck on `/ready`
-- [ ] T033 [US3] Add `info.json` in project root with participant info, stack (`scala`, `nginx`), and social links
-- [ ] T034 [US3] Validate deployment end-to-end: `docker compose up`, wait for `/ready`, send test payloads to port 9999, verify correct responses, check `docker stats` for resource compliance
+- [X] T030 [US3] Create `nginx.conf` in project root — upstream with `api1:8080` and `api2:8080`, listen on 9999, round-robin, `keepalive 64`
+- [X] T031 [US3] Create `Dockerfile` in project root — multi-stage build: Stage 1 (sbt compile + assembly/native-image), Stage 2 (minimal runtime with JRE or distroless), copy fat JAR or native binary + reference data files
+- [X] T032 [US3] Create `docker-compose.yml` in project root — nginx (0.10 CPU, 10 MB), api1 (0.45 CPU, 170 MB), api2 (0.45 CPU, 170 MB), port 9999, bridge network, healthcheck on `/ready`
+- [X] T033 [US3] Add `info.json` in project root with participant info, stack (`scala`, `nginx`), and social links
+- [X] T034 [US3] Validate deployment end-to-end: `docker compose up`, wait for `/ready`, send test payloads to port 9999, verify correct responses, check `docker stats` for resource compliance
 
 **Checkpoint**: Full stack runs via `docker compose up`, both instances serve traffic, resource limits respected.
 

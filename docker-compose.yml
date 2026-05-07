@@ -1,0 +1,70 @@
+# NOTE: Memory limits exceed the 350MB competition target.
+# Phase 6 (T035-T037) will implement binary index pre-processing
+# and shared mmap volumes so both API instances share the 168MB
+# vector data through the kernel page cache, bringing the total
+# within 1 CPU + 350 MB.
+services:
+  nginx:
+    image: nginx:alpine
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "9999:9999"
+    depends_on:
+      api1:
+        condition: service_healthy
+      api2:
+        condition: service_healthy
+    deploy:
+      resources:
+        limits:
+          cpus: "0.10"
+          memory: "10MB"
+    networks:
+      - rinha
+
+  api1:
+    build: .
+    hostname: api1
+    environment:
+      - DATA_DIR=/app/data
+      - HTTP_PORT=8080
+      - HTTP_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.45"
+          memory: "700MB"
+    networks:
+      - rinha
+
+  api2:
+    build: .
+    hostname: api2
+    environment:
+      - DATA_DIR=/app/data
+      - HTTP_PORT=8080
+      - HTTP_HOST=0.0.0.0
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ready || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 30
+      start_period: 60s
+    deploy:
+      resources:
+        limits:
+          cpus: "0.45"
+          memory: "700MB"
+    networks:
+      - rinha
+
+networks:
+  rinha:
+    driver: bridge

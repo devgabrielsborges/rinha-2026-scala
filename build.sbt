@@ -33,9 +33,13 @@ lazy val root = project
       "org.scalameta" %% "munit"             % munitVersion   % Test,
       "org.typelevel" %% "munit-cats-effect" % munitCEVersion % Test
     ),
-    assembly / mainClass := Some("rinha.Main"),
+    assembly / mainClass       := Some("rinha.Main"),
+    assembly / assemblyJarName := "app.jar",
     assembly / assemblyMergeStrategy := {
+      case PathList("META-INF", "services", xs @ _*) => MergeStrategy.concat
+      case PathList("META-INF", "native", xs @ _*)   => MergeStrategy.first
       case PathList("META-INF", "versions", xs @ _*) => MergeStrategy.first
+      case PathList("META-INF", "MANIFEST.MF")       => MergeStrategy.discard
       case PathList("META-INF", xs @ _*)             => MergeStrategy.discard
       case "module-info.class"                       => MergeStrategy.discard
       case x                                         => MergeStrategy.first
