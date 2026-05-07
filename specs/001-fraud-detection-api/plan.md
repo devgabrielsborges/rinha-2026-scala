@@ -1,6 +1,6 @@
 # Implementation Plan: Fraud Detection API
 
-**Branch**: `001-fraud-detection-api` | **Date**: 2026-05-07 | **Spec**: [spec.md](./spec.md)
+**Branch**: `feat/001-fraud-detection-api` | **Date**: 2026-05-07 | **Spec**: [spec.md](./spec.md)
 **Input**: Feature specification from `specs/001-fraud-detection-api/spec.md`
 
 ## Summary

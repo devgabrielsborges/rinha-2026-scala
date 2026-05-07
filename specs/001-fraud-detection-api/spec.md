@@ -1,6 +1,6 @@
 # Feature Specification: Fraud Detection API
 
-**Feature Branch**: `001-fraud-detection-api`
+**Feature Branch**: `feat/001-fraud-detection-api`
 **Created**: 2026-05-07
 **Status**: Draft
 **Input**: User description: "Scala API for fraud detection using vector search, focused on high-demanding requests and minimal runtime"
