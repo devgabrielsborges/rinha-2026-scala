@@ -1,57 +1,77 @@
 package rinha.infrastructure.loader
 
-import rinha.infrastructure.search.VPTree
+import rinha.infrastructure.search.IVFIndex
 
-import java.io.RandomAccessFile
-import java.nio.{ByteBuffer, ByteOrder, FloatBuffer, IntBuffer}
-import java.nio.file.{Files, Path, Paths}
+import java.nio.{ByteBuffer, ByteOrder}
+import java.nio.channels.FileChannel
+import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
 /**
- * Loads a pre-built VP-Tree binary index via memory-mapped files.
+ * Loads a pre-built IVF binary index into heap arrays for fast access.
  *
- * Both API containers mmap the same binary files from the Docker image layer, so the kernel shares
- * physical pages between processes through the overlay2 page cache.
+ * Reading the pre-built binary index skips JSON parsing and k-means clustering at startup, reducing
+ * boot time from ~60s to ~3s.
  */
 object BinaryIndexLoader:
 
-  def loadFromEnv(): VPTree =
+  def loadFromEnv(): IVFIndex =
     val indexDir = Env.getOrElse("INDEX_DIR", "")
     load(Paths.get(indexDir))
 
-  def load(dir: Path): VPTree =
-    val (size, dims) = readMeta(dir.resolve("meta.bin"))
-    val vectors      = mmapFloats(dir.resolve("vectors.bin"), size.toLong * dims)
-    val order        = mmapInts(dir.resolve("order.bin"), size.toLong)
-    val medians      = mmapFloats(dir.resolve("medians.bin"), size.toLong)
-    val labels       = readLabels(dir.resolve("labels.bin"))
-    VPTree.fromBuffers(vectors, labels, dims, order, medians, size)
+  def load(dir: Path): IVFIndex =
+    val (size, dims, nClusters, defaultProbe) = readMeta(dir.resolve("meta.bin"))
+    val nProbe      = Env.getOrElse("IVF_NPROBE", defaultProbe.toString).toInt
+    val vectors     = readFloats(dir.resolve("vectors.bin"), size * dims)
+    val centroids   = readFloats(dir.resolve("centroids.bin"), nClusters * dims)
+    val offsets     = readInts(dir.resolve("offsets.bin"), nClusters + 1)
+    val permutation = readInts(dir.resolve("permutation.bin"), size)
+    val labels      = readLabels(dir.resolve("labels.bin"))
+    IVFIndex(vectors, labels, dims, centroids, nClusters, offsets, permutation, nProbe, size)
 
-  private def readMeta(path: Path): (Int, Int) =
+  private def readMeta(path: Path): (Int, Int, Int, Int) =
     val bytes = Files.readAllBytes(path)
     val buf   = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN)
-    (buf.getInt(), buf.getInt())
+    (buf.getInt(), buf.getInt(), buf.getInt(), buf.getInt())
 
-  private def mmapFloats(path: Path, count: Long): FloatBuffer =
-    val raf = new RandomAccessFile(path.toFile, "r")
-    try
-      val mapped = raf.getChannel.map(
-        java.nio.channels.FileChannel.MapMode.READ_ONLY,
-        0,
-        count * 4
-      )
-      mapped.order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer()
-    finally raf.close()
+  private val ChunkSize = 32768
 
-  private def mmapInts(path: Path, count: Long): IntBuffer =
-    val raf = new RandomAccessFile(path.toFile, "r")
+  private def readFloats(path: Path, count: Int): Array[Float] =
+    val arr = new Array[Float](count)
+    val fc  = FileChannel.open(path, StandardOpenOption.READ)
     try
-      val mapped = raf.getChannel.map(
-        java.nio.channels.FileChannel.MapMode.READ_ONLY,
-        0,
-        count * 4
-      )
-      mapped.order(ByteOrder.LITTLE_ENDIAN).asIntBuffer()
-    finally raf.close()
+      val buf    = ByteBuffer.allocate(ChunkSize * 4).order(ByteOrder.LITTLE_ENDIAN)
+      val fbuf   = buf.asFloatBuffer()
+      var offset = 0
+      while offset < count do
+        buf.clear()
+        while buf.hasRemaining do if fc.read(buf) == -1 then buf.limit(buf.position())
+        buf.flip()
+        fbuf.clear()
+        fbuf.limit(buf.remaining() / 4)
+        val n = fbuf.remaining()
+        fbuf.get(arr, offset, n)
+        offset += n
+      arr
+    finally fc.close()
+
+  private def readInts(path: Path, count: Int): Array[Int] =
+    val arr = new Array[Int](count)
+    val fc  = FileChannel.open(path, StandardOpenOption.READ)
+    try
+      val buf    = ByteBuffer.allocate(ChunkSize * 4).order(ByteOrder.LITTLE_ENDIAN)
+      val ibuf   = buf.asIntBuffer()
+      var offset = 0
+      while offset < count do
+        buf.clear()
+        while buf.hasRemaining do if fc.read(buf) == -1 then buf.limit(buf.position())
+        buf.flip()
+        ibuf.clear()
+        ibuf.limit(buf.remaining() / 4)
+        val n = ibuf.remaining()
+        ibuf.get(arr, offset, n)
+        offset += n
+      arr
+    finally fc.close()
 
   private def readLabels(path: Path): java.util.BitSet =
     java.util.BitSet.valueOf(Files.readAllBytes(path))

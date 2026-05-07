@@ -19,7 +19,7 @@ COPY src/ src/
 RUN sbt assembly
 
 # -----------------------------------------------------------
-# Pre-build binary index (vectors.bin, order.bin, medians.bin, labels.bin)
+# Pre-build IVF binary index (centroids, cluster offsets, permutation)
 FROM eclipse-temurin:21-jre AS indexer
 
 WORKDIR /work
@@ -32,7 +32,7 @@ ENV REFERENCES_FILE=references.json.gz
 ENV REFERENCES_EXPECTED_COUNT=3100000
 
 RUN mkdir -p /work/index && \
-    java -XX:+UseG1GC -Xmx512m -cp app.jar rinha.tools.IndexBuilder
+    java -XX:+UseG1GC -Xmx768m -cp app.jar rinha.tools.IndexBuilder
 
 # -----------------------------------------------------------
 FROM eclipse-temurin:21-jre-alpine
@@ -55,10 +55,8 @@ EXPOSE 8080
 
 ENTRYPOINT ["java", \
     "-XX:+UseSerialGC", \
-    "-Xmx96m", \
+    "-Xmx256m", \
     "-XX:MaxMetaspaceSize=48m", \
-    "-XX:MaxDirectMemorySize=16m", \
-    "-XX:ReservedCodeCacheSize=16m", \
-    "-XX:CICompilerCount=2", \
+    "-XX:+AlwaysPreTouch", \
     "-Xss256k", \
     "-jar", "app.jar"]
