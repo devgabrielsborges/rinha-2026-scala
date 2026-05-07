@@ -8,3 +8,19 @@ repos:
       - id: check-json
       - id: check-merge-conflict
       - id: detect-private-key
+
+  - repo: local
+    hooks:
+      - id: scalafmt-check
+        name: scalafmt check
+        entry: sbt "scalafmtCheckAll; scalafmtSbtCheck"
+        language: system
+        pass_filenames: false
+        files: \.(scala|sbt)$
+
+      - id: scalafix-check
+        name: scalafix lint (unused code, redundant syntax)
+        entry: sbt "scalafixAll --check"
+        language: system
+        pass_filenames: false
+        files: \.scala$

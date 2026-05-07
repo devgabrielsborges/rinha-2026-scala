@@ -19,11 +19,11 @@
 
 **Purpose**: Project initialization, build tooling, and formatting configuration
 
-- [ ] T001 Create sbt project structure: `build.sbt`, `project/build.properties`, `project/plugins.sbt` with Scala 3.x, http4s (Netty backend), jsoniter-scala, munit dependencies
-- [ ] T002 [P] Create `.scalafmt.conf` with project formatting rules
-- [ ] T003 [P] Update `.gitignore` to include `target/`, `.idea/`, `.bsp/`, `.env`, `.DS_Store`, `metals.sbt`, `.metals/`
-- [ ] T004 [P] Create directory structure: `src/main/scala/rinha/domain/`, `src/main/scala/rinha/application/`, `src/main/scala/rinha/infrastructure/search/`, `src/main/scala/rinha/infrastructure/http/`, `src/main/scala/rinha/infrastructure/json/`, `src/main/scala/rinha/infrastructure/loader/`, `src/test/scala/rinha/domain/`, `src/test/scala/rinha/application/`, `src/test/scala/rinha/infrastructure/`
-- [ ] T005 [P] Download reference data files into `resources/`: `references.json.gz`, `mcc_risk.json`, `normalization.json` from the competition repository
+- [X] T001 Create sbt project structure: `build.sbt`, `project/build.properties`, `project/plugins.sbt` with Scala 3.x, http4s (Netty backend), jsoniter-scala, munit dependencies
+- [X] T002 [P] Create `.scalafmt.conf` with project formatting rules
+- [X] T003 [P] Update `.gitignore` to include `target/`, `.idea/`, `.bsp/`, `.env`, `.DS_Store`, `metals.sbt`, `.metals/`
+- [X] T004 [P] Create directory structure: `src/main/scala/rinha/domain/`, `src/main/scala/rinha/application/`, `src/main/scala/rinha/infrastructure/search/`, `src/main/scala/rinha/infrastructure/http/`, `src/main/scala/rinha/infrastructure/json/`, `src/main/scala/rinha/infrastructure/loader/`, `src/test/scala/rinha/domain/`, `src/test/scala/rinha/application/`, `src/test/scala/rinha/infrastructure/`
+- [X] T005 [P] Download reference data files into `resources/`: `references.json.gz`, `mcc_risk.json`, `normalization.json` from the competition repository
 
 **Checkpoint**: Project compiles with `sbt compile`, formatting enforced.
 
