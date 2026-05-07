@@ -56,18 +56,18 @@
 
 ### Implementation for User Story 1
 
-- [ ] T014 [US1] Implement `Vectorizer.vectorize()` pure function in `src/main/scala/rinha/domain/Vectorizer.scala` — transforms `TransactionRequest` + `NormalizationConstants` + `MccRiskMap` into `Array[Float]` of 14 dimensions with clamp and sentinel -1 logic
-- [ ] T015 [US1] Implement unit tests for `Vectorizer` in `src/test/scala/rinha/domain/VectorizerSpec.scala` — cover legit transaction, fraud transaction, null last_transaction (sentinel -1), unknown MCC (default 0.5), clamping edge cases (amount > max, installments = 0, avg_amount = 0)
-- [ ] T016 [US1] Implement `VPTree` data structure in `src/main/scala/rinha/infrastructure/search/VPTree.scala` — build from flat `Array[Float]` + `BitSet` labels, support `searchKNN(query, k)` returning `List[Neighbor]`, use squared Euclidean distance with early termination, flat array-based tree (no per-node objects)
-- [ ] T017 [US1] Implement unit tests for `VPTree` in `src/test/scala/rinha/infrastructure/search/VPTreeSpec.scala` — verify KNN correctness against brute-force baseline on a small dataset (~1000 vectors), test k=5, test sentinel -1 handling
-- [ ] T018 [US1] Implement `VPTreeSearchAdapter` in `src/main/scala/rinha/infrastructure/search/VPTreeSearchAdapter.scala` — implements `VectorSearchPort`, wraps `VPTree` instance
-- [ ] T019 [US1] Implement `ReferenceDataLoader` in `src/main/scala/rinha/infrastructure/loader/ReferenceDataLoader.scala` — decompress `references.json.gz`, parse 3M `{vector, label}` records into flat `Array[Float]` + `BitSet`, build `VPTree`
-- [ ] T020 [US1] Implement `FraudScoreUseCase` in `src/main/scala/rinha/application/FraudScoreUseCase.scala` — orchestrates: vectorize(tx) → searchPort.findKNearest(vector, 5) → count frauds → compute score → return FraudDecision
-- [ ] T021 [US1] Implement unit tests for `FraudScoreUseCase` in `src/test/scala/rinha/application/FraudScoreUseCaseSpec.scala` — mock `VectorSearchPort`, verify score computation (0/5=0.0→approved, 2/5=0.4→approved, 3/5=0.6→denied, 5/5=1.0→denied)
-- [ ] T022 [US1] Implement `TransactionDecoder` in `src/main/scala/rinha/infrastructure/json/TransactionDecoder.scala` — jsoniter-scala codec for `TransactionRequest` with snake_case field mapping, null `last_transaction` → `None`
-- [ ] T023 [US1] Implement `FraudDecisionEncoder` in `src/main/scala/rinha/infrastructure/json/FraudDecisionEncoder.scala` — jsoniter-scala codec for `FraudDecision` response serialization
-- [ ] T024 [US1] Implement `FraudScoreRoute` in `src/main/scala/rinha/infrastructure/http/FraudScoreRoute.scala` — `POST /fraud-score` handler: decode JSON → call FraudScoreUseCase → encode response. On parse error, return safe default `{ "approved": true, "fraud_score": 0.0 }` with HTTP 200
-- [ ] T025 [US1] Implement integration test in `src/test/scala/rinha/infrastructure/json/TransactionDecoderSpec.scala` — parse the example payloads from API.md (legit tx with null last_transaction, fraud tx), verify all fields decoded correctly
+- [X] T014 [US1] Implement `Vectorizer.vectorize()` pure function in `src/main/scala/rinha/domain/Vectorizer.scala` — transforms `TransactionRequest` + `NormalizationConstants` + `MccRiskMap` into `Array[Float]` of 14 dimensions with clamp and sentinel -1 logic
+- [X] T015 [US1] Implement unit tests for `Vectorizer` in `src/test/scala/rinha/domain/VectorizerSpec.scala` — cover legit transaction, fraud transaction, null last_transaction (sentinel -1), unknown MCC (default 0.5), clamping edge cases (amount > max, installments = 0, avg_amount = 0)
+- [X] T016 [US1] Implement `VPTree` data structure in `src/main/scala/rinha/infrastructure/search/VPTree.scala` — build from flat `Array[Float]` + `BitSet` labels, support `searchKNN(query, k)` returning `List[Neighbor]`, use squared Euclidean distance with early termination, flat array-based tree (no per-node objects)
+- [X] T017 [US1] Implement unit tests for `VPTree` in `src/test/scala/rinha/infrastructure/search/VPTreeSpec.scala` — verify KNN correctness against brute-force baseline on a small dataset (~1000 vectors), test k=5, test sentinel -1 handling
+- [X] T018 [US1] Implement `VPTreeSearchAdapter` in `src/main/scala/rinha/infrastructure/search/VPTreeSearchAdapter.scala` — implements `VectorSearchPort`, wraps `VPTree` instance
+- [X] T019 [US1] Implement `ReferenceDataLoader` in `src/main/scala/rinha/infrastructure/loader/ReferenceDataLoader.scala` — decompress `references.json.gz`, parse 3M `{vector, label}` records into flat `Array[Float]` + `BitSet`, build `VPTree`
+- [X] T020 [US1] Implement `FraudScoreUseCase` in `src/main/scala/rinha/application/FraudScoreUseCase.scala` — orchestrates: vectorize(tx) → searchPort.findKNearest(vector, 5) → count frauds → compute score → return FraudDecision
+- [X] T021 [US1] Implement unit tests for `FraudScoreUseCase` in `src/test/scala/rinha/application/FraudScoreUseCaseSpec.scala` — mock `VectorSearchPort`, verify score computation (0/5=0.0→approved, 2/5=0.4→approved, 3/5=0.6→denied, 5/5=1.0→denied)
+- [X] T022 [US1] Implement `TransactionDecoder` in `src/main/scala/rinha/infrastructure/json/TransactionDecoder.scala` — jsoniter-scala codec for `TransactionRequest` with snake_case field mapping, null `last_transaction` → `None`
+- [X] T023 [US1] Implement `FraudDecisionEncoder` in `src/main/scala/rinha/infrastructure/json/FraudDecisionEncoder.scala` — jsoniter-scala codec for `FraudDecision` response serialization
+- [X] T024 [US1] Implement `FraudScoreRoute` in `src/main/scala/rinha/infrastructure/http/FraudScoreRoute.scala` — `POST /fraud-score` handler: decode JSON → call FraudScoreUseCase → encode response. On parse error, return safe default `{ "approved": true, "fraud_score": 0.0 }` with HTTP 200
+- [X] T025 [US1] Implement integration test in `src/test/scala/rinha/infrastructure/json/TransactionDecoderSpec.scala` — parse the example payloads from API.md (legit tx with null last_transaction, fraud tx), verify all fields decoded correctly
 
 **Checkpoint**: `POST /fraud-score` returns correct results for both legit and fraud payloads. Vectorizer, VP-Tree, and use case all unit-tested.
 
