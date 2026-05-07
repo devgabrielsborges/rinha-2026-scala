@@ -81,10 +81,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T026 [US2] Implement `ReadyRoute` in `src/main/scala/rinha/infrastructure/http/ReadyRoute.scala` — `GET /ready` handler: return 200 if data loaded, 503 otherwise. Use an `AtomicBoolean` or similar readiness flag
-- [ ] T027 [US2] Implement `HttpServer` in `src/main/scala/rinha/infrastructure/http/HttpServer.scala` — http4s server with Netty backend, combine `FraudScoreRoute` + `ReadyRoute`, bind to port 8080
-- [ ] T028 [US2] Implement `Main.scala` in `src/main/scala/rinha/Main.scala` — wiring: load config → load references → build VP-Tree → create use case → create routes → start HTTP server → set ready flag
-- [ ] T029 [US2] Implement integration test for startup and readiness in `src/test/scala/rinha/infrastructure/http/ReadyRouteSpec.scala` — verify `/ready` returns 503 before init, 200 after init
+- [X] T026 [US2] Implement `ReadyRoute` in `src/main/scala/rinha/infrastructure/http/ReadyRoute.scala` — `GET /ready` handler: return 200 if data loaded, 503 otherwise. Use an `AtomicBoolean` or similar readiness flag
+- [X] T027 [US2] Implement `HttpServer` in `src/main/scala/rinha/infrastructure/http/HttpServer.scala` — http4s server with Netty backend, combine `FraudScoreRoute` + `ReadyRoute`, bind to port 8080
+- [X] T028 [US2] Implement `Main.scala` in `src/main/scala/rinha/Main.scala` — wiring: load config → load references → build VP-Tree → create use case → create routes → start HTTP server → set ready flag
+- [X] T029 [US2] Implement integration test for startup and readiness in `src/test/scala/rinha/infrastructure/http/ReadyRouteSpec.scala` — verify `/ready` returns 503 before init, 200 after init
 
 **Checkpoint**: Application starts, `/ready` transitions from 503 to 200, `POST /fraud-score` works after readiness.
 
