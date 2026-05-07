@@ -96,6 +96,7 @@ Atomic, traceable, and safe version control:
   unrelated changes.
 - Commits MUST be atomic: one logical change per commit. A commit
   MUST NOT mix refactoring with feature work or bug fixes.
+- Always add signed-off-by with: e.g `git commit -s`
 - Commit messages MUST follow Conventional Commits format:
   `type(scope): description` (e.g., `feat(vectorizer): add cosine
   distance calculation`). Body MUST explain *why*, not *what*.
