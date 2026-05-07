@@ -2,35 +2,22 @@ package rinha.infrastructure.search
 
 import rinha.domain.{Label, Neighbor}
 
+import java.nio.{FloatBuffer, IntBuffer}
 import scala.collection.mutable
 import scala.util.Random
 
 /**
  * Flat array-based Vantage-Point Tree for exact KNN search in metric spaces.
  *
- * The tree reorders an index array so that each node's vantage point sits at `start`, closer points
- * occupy [start+1, mid), and farther points occupy [mid, end). Medians are stored in a parallel
- * array indexed by the `start` position.
- *
- * @param vectors
- *   contiguous flat Float array: vectors(i*dims .. i*dims+dims-1) is vector i
- * @param labels
- *   BitSet where bit i is set if vector i is fraud
- * @param dims
- *   number of dimensions per vector
- * @param order
- *   permutation array built during construction
- * @param medians
- *   median distance stored per node (indexed by start position)
- * @param size
- *   number of vectors
+ * Internally stores vectors and tree structure in NIO buffers, supporting both heap-backed (from
+ * Array.wrap) and direct/mmap-backed buffers for shared-memory deployments.
  */
 final class VPTree private (
-  private val vectors: Array[Float],
+  private val vectors: FloatBuffer,
   private val labels: java.util.BitSet,
   private val dims: Int,
-  private val order: Array[Int],
-  private val medians: Array[Float],
+  private val order: IntBuffer,
+  private val medians: FloatBuffer,
   val size: Int
 ):
 
@@ -48,15 +35,15 @@ final class VPTree private (
   ): Unit =
     if start >= end then return
 
-    val vpIdx = order(start)
-    val dist  = euclideanDist(query, 0, vectors, vpIdx * dims, dims)
+    val vpIdx = order.get(start)
+    val dist  = euclideanDist(query, 0, vpIdx * dims, dims)
 
     heap.tryInsert(vpIdx, dist)
 
     if start + 1 >= end then return
 
     val mid = start + 1 + (end - start - 1) / 2
-    val mu  = medians(start)
+    val mu  = medians.get(start)
 
     if dist < mu then
       search(start + 1, mid, query, k, heap)
@@ -68,14 +55,13 @@ final class VPTree private (
   private def euclideanDist(
     a: Array[Float],
     aOff: Int,
-    b: Array[Float],
     bOff: Int,
     d: Int
   ): Float =
     var sum = 0.0f
     var i   = 0
     while i < d do
-      val diff = a(aOff + i) - b(bOff + i)
+      val diff = a(aOff + i) - vectors.get(bOff + i)
       sum += diff * diff
       i += 1
     math.sqrt(sum.toDouble).toFloat
@@ -84,6 +70,11 @@ final class VPTree private (
     if labels.get(index) then Label.Fraud else Label.Legit
 
 object VPTree:
+
+  final case class BuildData(
+    order: Array[Int],
+    medians: Array[Float]
+  )
 
   def build(
     vectors: Array[Float],
@@ -98,13 +89,46 @@ object VPTree:
     dims: Int,
     size: Int,
     rng: Random
-  ): VPTree =
+  ): VPTree = doBuild(vectors, labels, dims, size, rng)._1
+
+  def buildWithData(
+    vectors: Array[Float],
+    labels: java.util.BitSet,
+    dims: Int,
+    size: Int
+  ): (VPTree, BuildData) = doBuild(vectors, labels, dims, size, new Random(42))
+
+  def fromBuffers(
+    vectors: FloatBuffer,
+    labels: java.util.BitSet,
+    dims: Int,
+    order: IntBuffer,
+    medians: FloatBuffer,
+    size: Int
+  ): VPTree = new VPTree(vectors, labels, dims, order, medians, size)
+
+  private def doBuild(
+    vectors: Array[Float],
+    labels: java.util.BitSet,
+    dims: Int,
+    size: Int,
+    rng: Random
+  ): (VPTree, BuildData) =
     val order   = Array.tabulate(size)(identity)
     val medians = new Array[Float](size)
     val dists   = new Array[Float](size)
 
     buildRecursive(vectors, dims, order, medians, dists, 0, size, rng)
-    new VPTree(vectors, labels, dims, order, medians, size)
+
+    val tree = new VPTree(
+      FloatBuffer.wrap(vectors),
+      labels,
+      dims,
+      IntBuffer.wrap(order),
+      FloatBuffer.wrap(medians),
+      size
+    )
+    (tree, BuildData(order, medians))
 
   private def buildRecursive(
     vectors: Array[Float],
@@ -118,18 +142,15 @@ object VPTree:
   ): Unit =
     if end - start <= 1 then return
 
-    // pick a random vantage point and swap to start
     val vpPos = start + rng.nextInt(end - start)
     swap(order, start, vpPos)
     val vpIdx = order(start)
 
-    // compute distances from vantage point to all other points in range
     var i = start + 1
     while i < end do
       dists(i) = euclideanDistStatic(vectors, vpIdx * dims, vectors, order(i) * dims, dims)
       i += 1
 
-    // partition around median
     val mid = start + 1 + (end - start - 1) / 2
     nthElement(order, dists, start + 1, end, mid)
     medians(start) = dists(mid)
@@ -226,7 +247,6 @@ object VPTree:
         if left < count && distances(left) > distances(largest) then largest = left
         if right < count && distances(right) > distances(largest) then largest = right
         if largest == i then return
-        // swap
         val tmpI = indices(i); indices(i) = indices(largest); indices(largest) = tmpI
         val tmpD = distances(i); distances(i) = distances(largest); distances(largest) = tmpD
         i = largest

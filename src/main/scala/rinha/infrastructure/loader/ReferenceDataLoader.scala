@@ -36,7 +36,7 @@ object ReferenceDataLoader:
 
   private val DefaultExpectedCount = 3_100_000
 
-  private def parseGzippedJson(path: Path): (Array[Float], java.util.BitSet, Int) =
+  private[rinha] def parseGzippedJson(path: Path): (Array[Float], java.util.BitSet, Int) =
     val fis = new FileInputStream(path.toFile)
     val bis = new BufferedInputStream(fis, 1024 * 256)
     val gis = new GZIPInputStream(bis, 1024 * 256)

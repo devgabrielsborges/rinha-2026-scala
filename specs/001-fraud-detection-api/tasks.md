@@ -112,14 +112,14 @@
 
 **Purpose**: Performance optimization, memory tuning, and submission readiness
 
-- [ ] T035 [P] Create pre-processing tool in `src/main/scala/rinha/tools/IndexBuilder.scala` — standalone app that reads `references.json.gz`, builds VP-Tree, serializes to binary format (`vectors.bin`, `labels.bin`, `vptree.bin`) for fast startup via mmap
-- [ ] T036 [P] Update `ReferenceDataLoader` to support loading pre-built binary index files (mmap path) as alternative to JSON parsing, in `src/main/scala/rinha/infrastructure/loader/ReferenceDataLoader.scala`
-- [ ] T037 [P] Update `Dockerfile` to add a pre-processing build stage that runs `IndexBuilder` to produce binary index files baked into the image
-- [ ] T038 Memory optimization: profile heap usage per container with `docker stats`, tune JVM flags (`-Xms`, `-Xmx`, `-XX:MaxGCPauseMillis=1`, `-XX:+AlwaysPreTouch`), verify total stays within 350 MB
+- [X] T035 [P] Create pre-processing tool in `src/main/scala/rinha/tools/IndexBuilder.scala` — standalone app that reads `references.json.gz`, builds VP-Tree, serializes to binary format (`vectors.bin`, `labels.bin`, `vptree.bin`) for fast startup via mmap
+- [X] T036 [P] Update `ReferenceDataLoader` to support loading pre-built binary index files (mmap path) as alternative to JSON parsing, in `src/main/scala/rinha/infrastructure/loader/ReferenceDataLoader.scala`
+- [X] T037 [P] Update `Dockerfile` to add a pre-processing build stage that runs `IndexBuilder` to produce binary index files baked into the image
+- [X] T038 Memory optimization: profile heap usage per container with `docker stats`, tune JVM flags (`-Xms`, `-Xmx`, `-XX:MaxGCPauseMillis=1`, `-XX:+AlwaysPreTouch`), verify total stays within 350 MB
 - [ ] T039 [P] Add GraalVM native-image support: add `sbt-native-image` plugin to `project/plugins.sbt`, configure reflection and resource hints, test build
 - [ ] T040 Performance benchmarking: run k6 load test from `test/` directory, measure p99 latency, identify bottlenecks, tune nginx (`worker_connections`, `proxy_buffering off`)
 - [ ] T041 Float32 validation: write a build-time validation script that compares VP-Tree KNN results (Float32) against brute-force (Float64) on 1000 sample queries, assert 100% neighbor ordering match
-- [ ] T042 [P] Update `README.md` with project description, build instructions, and architecture overview
+- [X] T042 [P] Update `README.md` with project description, build instructions, and architecture overview
 - [ ] T043 Prepare `submission` branch: create branch with only `docker-compose.yml`, `nginx.conf`, `info.json`, and pre-built Docker image reference
 
 ---

@@ -5,8 +5,10 @@ import cats.effect.kernel.Ref
 
 import rinha.application.FraudScoreUseCase
 import rinha.infrastructure.http.HttpServer
-import rinha.infrastructure.loader.{ConfigLoader, ReferenceDataLoader}
-import rinha.infrastructure.search.VPTreeSearchAdapter
+import rinha.infrastructure.loader.{BinaryIndexLoader, ConfigLoader, Env, ReferenceDataLoader}
+import rinha.infrastructure.search.{VPTree, VPTreeSearchAdapter}
+
+import java.nio.file.{Files, Paths}
 
 object Main extends IOApp:
 
@@ -18,11 +20,11 @@ object Main extends IOApp:
       config <- IO.blocking(ConfigLoader.loadFromEnv())
       (normalization, mccRisk) = config
 
-      _       <- IO.println("Loading reference data and building VP-Tree index...")
-      refData <- IO.blocking(ReferenceDataLoader.loadFromEnv())
-      _       <- IO.println(s"Loaded ${refData.size} reference vectors")
+      _    <- IO.println("Loading index...")
+      tree <- IO.blocking(loadTree())
+      _    <- IO.println(s"Loaded ${tree.size} reference vectors")
 
-      searchPort = new VPTreeSearchAdapter(refData.tree)
+      searchPort = new VPTreeSearchAdapter(tree)
       useCase    = new FraudScoreUseCase(searchPort, normalization, mccRisk)
 
       exitCode <- HttpServer
@@ -36,3 +38,12 @@ object Main extends IOApp:
           yield ExitCode.Success
         }
     yield exitCode
+
+  private def loadTree(): VPTree =
+    val indexDir = Env.getOrElse("INDEX_DIR", "")
+    if indexDir.nonEmpty && Files.exists(Paths.get(indexDir, "meta.bin")) then
+      println(s"Using pre-built binary index from $indexDir (mmap)")
+      BinaryIndexLoader.loadFromEnv()
+    else
+      println("Binary index not found, falling back to JSON parsing + tree build")
+      ReferenceDataLoader.loadFromEnv().tree
