@@ -33,6 +33,7 @@ ENV REFERENCES_EXPECTED_COUNT=3100000
 
 RUN mkdir -p /work/index && \
     java --add-opens java.base/sun.misc=ALL-UNNAMED \
+    --add-opens java.base/java.nio=ALL-UNNAMED \
     -XX:+UseG1GC -Xmx768m -cp app.jar rinha.tools.IndexBuilder
 
 # -----------------------------------------------------------
@@ -56,6 +57,7 @@ EXPOSE 9999
 
 ENTRYPOINT ["java", \
     "--add-opens", "java.base/sun.misc=ALL-UNNAMED", \
+    "--add-opens", "java.base/java.nio=ALL-UNNAMED", \
     "-XX:+UseSerialGC", \
     "-Xmx48m", \
     "-XX:MaxMetaspaceSize=32m", \

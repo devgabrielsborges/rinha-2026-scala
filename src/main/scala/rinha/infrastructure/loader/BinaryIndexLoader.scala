@@ -7,8 +7,9 @@ import java.nio.channels.FileChannel
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
 /**
- * Loads a pre-built IVF binary index. Vectors go to off-heap native memory via Unsafe to avoid GC
- * scanning the 168MB array. Centroids, offsets, and permutation stay on-heap (small).
+ * Loads a pre-built IVF binary index. Vectors are memory-mapped so multiple processes sharing the
+ * same file get identical physical pages from the OS kernel. Centroids, offsets, and permutation
+ * stay on-heap (small).
  */
 object BinaryIndexLoader:
 
@@ -19,7 +20,7 @@ object BinaryIndexLoader:
   def load(dir: Path): IVFIndex =
     val (size, dims, nClusters, defaultProbe) = readMeta(dir.resolve("meta.bin"))
     val nProbe      = Env.getOrElse("IVF_NPROBE", defaultProbe.toString).toInt
-    val vectors     = readFloatsOffHeap(dir.resolve("vectors.bin"), size * dims)
+    val vectors     = OffHeapFloatArray.fromMmap(dir.resolve("vectors.bin"), size * dims)
     val centroids   = readFloats(dir.resolve("centroids.bin"), nClusters * dims)
     val offsets     = readInts(dir.resolve("offsets.bin"), nClusters + 1)
     val permutation = readInts(dir.resolve("permutation.bin"), size)
@@ -32,33 +33,6 @@ object BinaryIndexLoader:
     (buf.getInt(), buf.getInt(), buf.getInt(), buf.getInt())
 
   private val ChunkSize = 32768
-
-  private def readFloatsOffHeap(path: Path, count: Int): OffHeapFloatArray =
-    val oha = OffHeapFloatArray.allocate(count)
-    val fc  = FileChannel.open(path, StandardOpenOption.READ)
-    try
-      val buf  = ByteBuffer.allocate(ChunkSize * 4).order(ByteOrder.LITTLE_ENDIAN)
-      val fbuf = buf.asFloatBuffer()
-      val u    = OffHeapFloatArray.unsafe
-      var off  = 0L
-      while off < count.toLong do
-        buf.clear()
-        while buf.hasRemaining do if fc.read(buf) == -1 then buf.limit(buf.position())
-        buf.flip()
-        fbuf.clear()
-        fbuf.limit(buf.remaining() / 4)
-        val n = fbuf.remaining()
-        var i = 0
-        while i < n do
-          u.putFloat(oha.address + (off + i) * 4L, fbuf.get())
-          i += 1
-        off += n
-      oha
-    catch
-      case e: Exception =>
-        oha.free()
-        throw e
-    finally fc.close()
 
   private def readFloats(path: Path, count: Int): Array[Float] =
     val arr = new Array[Float](count)
