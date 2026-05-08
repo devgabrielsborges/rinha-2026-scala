@@ -32,7 +32,8 @@ ENV REFERENCES_FILE=references.json.gz
 ENV REFERENCES_EXPECTED_COUNT=3100000
 
 RUN mkdir -p /work/index && \
-    java -XX:+UseG1GC -Xmx768m -cp app.jar rinha.tools.IndexBuilder
+    java --add-opens java.base/sun.misc=ALL-UNNAMED \
+    -XX:+UseG1GC -Xmx768m -cp app.jar rinha.tools.IndexBuilder
 
 # -----------------------------------------------------------
 FROM eclipse-temurin:21-jre-alpine
@@ -54,9 +55,9 @@ ENV HTTP_HOST=0.0.0.0
 EXPOSE 9999
 
 ENTRYPOINT ["java", \
+    "--add-opens", "java.base/sun.misc=ALL-UNNAMED", \
     "-XX:+UseSerialGC", \
-    "-Xmx64m", \
-    "-XX:MaxDirectMemorySize=180m", \
-    "-XX:MaxMetaspaceSize=48m", \
+    "-Xmx48m", \
+    "-XX:MaxMetaspaceSize=32m", \
     "-Xss256k", \
     "-jar", "app.jar"]
