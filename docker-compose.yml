@@ -25,17 +25,11 @@ services:
       - IVF_NPROBE=5
       - HTTP_PORT=8080
       - HTTP_HOST=0.0.0.0
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ready || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 15s
     deploy:
       resources:
         limits:
-          cpus: "0.425"
-          memory: "165MB"
+          cpus: "0.40"
+          memory: "164MB"
 
   api2:
     image: ghcr.io/devgabrielsborges/rinha-2026-scala:latest
@@ -51,25 +45,19 @@ services:
       - IVF_NPROBE=5
       - HTTP_PORT=8080
       - HTTP_HOST=0.0.0.0
-    healthcheck:
-      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/ready || exit 1"]
-      interval: 5s
-      timeout: 3s
-      retries: 20
-      start_period: 15s
     deploy:
       resources:
         limits:
-          cpus: "0.425"
-          memory: "165MB"
+          cpus: "0.40"
+          memory: "164MB"
 
   nginx:
     image: nginx:alpine
     depends_on:
       api1:
-        condition: service_healthy
+        condition: service_started
       api2:
-        condition: service_healthy
+        condition: service_started
     ports:
       - "9999:9999"
     volumes:
@@ -77,8 +65,8 @@ services:
     deploy:
       resources:
         limits:
-          cpus: "0.1"
-          memory: "15MB"
+          cpus: "0.15"
+          memory: "10MB"
 
 volumes:
   shared-index:
