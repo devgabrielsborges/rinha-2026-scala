@@ -2,17 +2,16 @@ package rinha.infrastructure.search
 
 import rinha.domain.{Label, Neighbor}
 
-import java.nio.FloatBuffer
 import scala.collection.mutable
 
 /**
  * Inverted File (IVF) index for fast approximate KNN search.
  *
- * Vectors are stored in an off-heap FloatBuffer to avoid GC pressure on the 168MB array. Centroids
- * remain on-heap (tiny: ~164KB) for fast centroid search.
+ * Vectors are stored in off-heap native memory via Unsafe for zero-overhead reads without GC
+ * pressure. Centroids remain on-heap (tiny: ~164KB) for fast centroid search.
  */
 final class IVFIndex private (
-  private val vectors: FloatBuffer,
+  private val vectors: OffHeapFloatArray,
   private val labels: java.util.BitSet,
   private val dims: Int,
   private val centroids: Array[Float],
@@ -34,13 +33,12 @@ final class IVFIndex private (
       val end   = clusterOffsets(c + 1)
       var i     = start
       while i < end do
-        val idx    = permutation(i)
-        val distSq = squaredEuclideanOffHeap(query, idx * dims, dims)
-        heap.tryInsert(idx, distSq)
+        val distSq = squaredEuclideanOffHeap(query, i * dims, dims)
+        heap.tryInsert(i, distSq)
         i += 1
       p += 1
 
-    heap.toSortedList(idx => if labels.get(idx) then Label.Fraud else Label.Legit)
+    heap.toSortedList(i => if labels.get(permutation(i)) then Label.Fraud else Label.Legit)
 
   private def findNearestCentroids(query: Array[Float], n: Int): Array[Int] =
     val dists   = new Array[Float](nClusters)
@@ -59,11 +57,14 @@ final class IVFIndex private (
     bOff: Int,
     d: Int
   ): Float =
-    var sum = 0.0f
-    var i   = 0
+    val u        = OffHeapFloatArray.unsafe
+    var baseAddr = vectors.address + bOff.toLong * 4L
+    var sum      = 0.0f
+    var i        = 0
     while i < d do
-      val diff = a(i) - vectors.get(bOff + i)
+      val diff = a(i) - u.getFloat(baseAddr)
       sum += diff * diff
+      baseAddr += 4L
       i += 1
     sum
 
@@ -104,7 +105,7 @@ final class IVFIndex private (
 object IVFIndex:
 
   def apply(
-    vectors: FloatBuffer,
+    vectors: OffHeapFloatArray,
     labels: java.util.BitSet,
     dims: Int,
     centroids: Array[Float],
@@ -138,7 +139,7 @@ object IVFIndex:
     size: Int
   ): IVFIndex =
     new IVFIndex(
-      FloatBuffer.wrap(vectors),
+      OffHeapFloatArray.fromArray(vectors),
       labels,
       dims,
       centroids,

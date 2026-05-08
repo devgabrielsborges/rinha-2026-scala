@@ -51,8 +51,10 @@ object IndexBuilder:
     Files.createDirectories(outputPath)
     println(s"IndexBuilder: writing binary index to $outputPath ...")
 
+    val reorderedVectors = reorderByCluster(vectors, buildData.permutation, count, Dims)
+
     writeMeta(outputPath.resolve("meta.bin"), count, Dims, NClusters, NProbe)
-    writeFloatArray(outputPath.resolve("vectors.bin"), vectors, count * Dims)
+    writeFloatArray(outputPath.resolve("vectors.bin"), reorderedVectors, count * Dims)
     writeFloatArray(outputPath.resolve("centroids.bin"), buildData.centroids, NClusters * Dims)
     writeIntArray(outputPath.resolve("offsets.bin"), buildData.clusterOffsets, NClusters + 1)
     writeIntArray(outputPath.resolve("permutation.bin"), buildData.permutation, count)
@@ -60,6 +62,22 @@ object IndexBuilder:
 
     println("IndexBuilder: binary index written successfully")
     printSummary(outputPath)
+
+  /** Reorder vectors so that cluster i's vectors are contiguous at offsets[i]..offsets[i+1]. */
+  private def reorderByCluster(
+    vectors: Array[Float],
+    permutation: Array[Int],
+    count: Int,
+    dims: Int
+  ): Array[Float] =
+    val out = new Array[Float](count * dims)
+    var i   = 0
+    while i < count do
+      val srcOff = permutation(i) * dims
+      val dstOff = i * dims
+      System.arraycopy(vectors, srcOff, out, dstOff, dims)
+      i += 1
+    out
 
   private def writeMeta(path: Path, size: Int, dims: Int, nClusters: Int, nProbe: Int): Unit =
     val buf = ByteBuffer.allocate(16).order(ByteOrder.LITTLE_ENDIAN)
