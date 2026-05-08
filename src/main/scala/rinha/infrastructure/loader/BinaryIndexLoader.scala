@@ -2,15 +2,13 @@ package rinha.infrastructure.loader
 
 import rinha.infrastructure.search.IVFIndex
 
-import java.nio.{ByteBuffer, ByteOrder}
+import java.nio.{ByteBuffer, ByteOrder, FloatBuffer}
 import java.nio.channels.FileChannel
 import java.nio.file.{Files, Path, Paths, StandardOpenOption}
 
 /**
- * Loads a pre-built IVF binary index into heap arrays for fast access.
- *
- * Reading the pre-built binary index skips JSON parsing and k-means clustering at startup, reducing
- * boot time from ~60s to ~3s.
+ * Loads a pre-built IVF binary index. Vectors go to off-heap direct memory to avoid GC scanning the
+ * 168MB array. Centroids, offsets, and permutation stay on-heap (small).
  */
 object BinaryIndexLoader:
 
@@ -21,7 +19,7 @@ object BinaryIndexLoader:
   def load(dir: Path): IVFIndex =
     val (size, dims, nClusters, defaultProbe) = readMeta(dir.resolve("meta.bin"))
     val nProbe      = Env.getOrElse("IVF_NPROBE", defaultProbe.toString).toInt
-    val vectors     = readFloats(dir.resolve("vectors.bin"), size * dims)
+    val vectors     = readFloatsDirect(dir.resolve("vectors.bin"), size * dims)
     val centroids   = readFloats(dir.resolve("centroids.bin"), nClusters * dims)
     val offsets     = readInts(dir.resolve("offsets.bin"), nClusters + 1)
     val permutation = readInts(dir.resolve("permutation.bin"), size)
@@ -34,6 +32,14 @@ object BinaryIndexLoader:
     (buf.getInt(), buf.getInt(), buf.getInt(), buf.getInt())
 
   private val ChunkSize = 32768
+
+  private def readFloatsDirect(path: Path, count: Int): FloatBuffer =
+    val direct = ByteBuffer.allocateDirect(count * 4).order(ByteOrder.LITTLE_ENDIAN)
+    val fc     = FileChannel.open(path, StandardOpenOption.READ)
+    try while direct.hasRemaining do fc.read(direct)
+    finally fc.close()
+    direct.flip()
+    direct.asFloatBuffer()
 
   private def readFloats(path: Path, count: Int): Array[Float] =
     val arr = new Array[Float](count)

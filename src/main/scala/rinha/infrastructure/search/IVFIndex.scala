@@ -2,16 +2,17 @@ package rinha.infrastructure.search
 
 import rinha.domain.{Label, Neighbor}
 
+import java.nio.FloatBuffer
 import scala.collection.mutable
 
 /**
  * Inverted File (IVF) index for fast approximate KNN search.
  *
- * Partitions the reference vectors into clusters via k-means. At query time, only the nearest
- * `nProbe` clusters are scanned, reducing the search space from N to N*nProbe/nClusters.
+ * Vectors are stored in an off-heap FloatBuffer to avoid GC pressure on the 168MB array. Centroids
+ * remain on-heap (tiny: ~164KB) for fast centroid search.
  */
 final class IVFIndex private (
-  private val vectors: Array[Float],
+  private val vectors: FloatBuffer,
   private val labels: java.util.BitSet,
   private val dims: Int,
   private val centroids: Array[Float],
@@ -34,7 +35,7 @@ final class IVFIndex private (
       var i     = start
       while i < end do
         val idx    = permutation(i)
-        val distSq = squaredEuclidean(query, vectors, idx * dims, dims)
+        val distSq = squaredEuclideanOffHeap(query, idx * dims, dims)
         heap.tryInsert(idx, distSq)
         i += 1
       p += 1
@@ -46,14 +47,27 @@ final class IVFIndex private (
     val indices = new Array[Int](nClusters)
     var c       = 0
     while c < nClusters do
-      dists(c) = squaredEuclidean(query, centroids, c * dims, dims)
+      dists(c) = squaredEuclideanHeap(query, centroids, c * dims, dims)
       indices(c) = c
       c += 1
 
     partialSort(indices, dists, n)
     java.util.Arrays.copyOf(indices, n)
 
-  private def squaredEuclidean(
+  private def squaredEuclideanOffHeap(
+    a: Array[Float],
+    bOff: Int,
+    d: Int
+  ): Float =
+    var sum = 0.0f
+    var i   = 0
+    while i < d do
+      val diff = a(i) - vectors.get(bOff + i)
+      sum += diff * diff
+      i += 1
+    sum
+
+  private def squaredEuclideanHeap(
     a: Array[Float],
     b: Array[Float],
     bOff: Int,
@@ -90,7 +104,7 @@ final class IVFIndex private (
 object IVFIndex:
 
   def apply(
-    vectors: Array[Float],
+    vectors: FloatBuffer,
     labels: java.util.BitSet,
     dims: Int,
     centroids: Array[Float],
@@ -102,6 +116,29 @@ object IVFIndex:
   ): IVFIndex =
     new IVFIndex(
       vectors,
+      labels,
+      dims,
+      centroids,
+      nClusters,
+      clusterOffsets,
+      permutation,
+      nProbe,
+      size
+    )
+
+  def fromHeapArray(
+    vectors: Array[Float],
+    labels: java.util.BitSet,
+    dims: Int,
+    centroids: Array[Float],
+    nClusters: Int,
+    clusterOffsets: Array[Int],
+    permutation: Array[Int],
+    nProbe: Int,
+    size: Int
+  ): IVFIndex =
+    new IVFIndex(
+      FloatBuffer.wrap(vectors),
       labels,
       dims,
       centroids,
