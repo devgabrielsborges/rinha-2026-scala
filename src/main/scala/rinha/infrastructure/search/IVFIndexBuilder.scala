@@ -38,7 +38,17 @@ object IVFIndexBuilder:
 
     val result = IVFBuildResult(centroids, offsets, permutation)
     val index =
-      IVFIndex(vectors, labels, dims, centroids, nClusters, offsets, permutation, nProbe, size)
+      IVFIndex.fromHeapArray(
+        vectors,
+        labels,
+        dims,
+        centroids,
+        nClusters,
+        offsets,
+        permutation,
+        nProbe,
+        size
+      )
     (index, result)
 
   private def initCentroids(

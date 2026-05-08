@@ -48,15 +48,15 @@ ENV DATA_DIR=/app/data
 ENV INDEX_DIR=/app/index
 ENV NORMALIZATION_FILE=normalization.json
 ENV MCC_RISK_FILE=mcc_risk.json
-ENV HTTP_PORT=8080
+ENV HTTP_PORT=9999
 ENV HTTP_HOST=0.0.0.0
 
-EXPOSE 8080
+EXPOSE 9999
 
 ENTRYPOINT ["java", \
     "-XX:+UseSerialGC", \
-    "-Xmx256m", \
+    "-Xmx64m", \
+    "-XX:MaxDirectMemorySize=180m", \
     "-XX:MaxMetaspaceSize=48m", \
-    "-XX:+AlwaysPreTouch", \
     "-Xss256k", \
     "-jar", "app.jar"]
