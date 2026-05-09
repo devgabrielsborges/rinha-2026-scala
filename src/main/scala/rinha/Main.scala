@@ -9,7 +9,7 @@ import java.nio.file.{Files, Paths}
 
 object Main:
 
-  private val WarmupIterations = 1000
+  private val WarmupIterations = 200
 
   def main(args: Array[String]): Unit =
     println("Loading configuration...")
@@ -22,12 +22,16 @@ object Main:
     val searchPort = new IVFSearchAdapter(index)
     val useCase    = new FraudScoreUseCase(searchPort, normalization, mccRisk)
 
-    println("Warming up JIT compiler...")
-    warmup(index)
-    println("Warmup complete")
-
     val server = new NettyServer(useCase)
     server.setReady()
+
+    val warmupThread = new Thread(() =>
+      warmup(index)
+      println("Warmup complete")
+    )
+    warmupThread.setDaemon(true)
+    warmupThread.start()
+
     server.start()
 
   private def warmup(index: IVFIndex): Unit =
