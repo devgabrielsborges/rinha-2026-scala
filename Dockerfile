@@ -45,6 +45,7 @@ COPY --from=builder /build/target/scala-3.3.7/app.jar app.jar
 COPY --from=indexer /work/index/ index/
 COPY resources/normalization.json  data/normalization.json
 COPY resources/mcc_risk.json       data/mcc_risk.json
+COPY entrypoint.sh entrypoint.sh
 
 ENV DATA_DIR=/app/data
 ENV INDEX_DIR=/app/index
@@ -55,11 +56,4 @@ ENV HTTP_HOST=0.0.0.0
 
 EXPOSE 9999
 
-ENTRYPOINT ["java", \
-    "--add-opens", "java.base/sun.misc=ALL-UNNAMED", \
-    "--add-opens", "java.base/java.nio=ALL-UNNAMED", \
-    "-XX:+UseSerialGC", \
-    "-Xmx48m", \
-    "-XX:MaxMetaspaceSize=32m", \
-    "-Xss256k", \
-    "-jar", "app.jar"]
+ENTRYPOINT ["/app/entrypoint.sh"]
