@@ -2,11 +2,9 @@ services:
   api1:
     image: ghcr.io/devgabrielsborges/rinha-2026-scala:latest
     hostname: api1
-    volumes:
-      - shared-index:/shared/index
     environment:
       - DATA_DIR=/app/data
-      - SHARED_INDEX_DIR=/shared/index
+      - INDEX_DIR=/app/index
       - IVF_NPROBE=5
       - HTTP_PORT=8080
       - HTTP_HOST=0.0.0.0
@@ -25,11 +23,9 @@ services:
   api2:
     image: ghcr.io/devgabrielsborges/rinha-2026-scala:latest
     hostname: api2
-    volumes:
-      - shared-index:/shared/index
     environment:
       - DATA_DIR=/app/data
-      - SHARED_INDEX_DIR=/shared/index
+      - INDEX_DIR=/app/index
       - IVF_NPROBE=5
       - HTTP_PORT=8080
       - HTTP_HOST=0.0.0.0
@@ -61,6 +57,3 @@ services:
         limits:
           cpus: "0.20"
           memory: "20MB"
-
-volumes:
-  shared-index:
